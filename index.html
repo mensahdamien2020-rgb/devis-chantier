@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1C1B19">
+<title>Devis Chantier — STAMINA</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Archivo+Expanded:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="offline-banner" class="offline-banner hidden">📴 Hors-ligne — tout est enregistré sur ce téléphone</div>
+
+<header class="topbar">
+  <div class="topbar-mark">
+    <span class="mark-tick">▮▮▮</span>
+    <h1>Mon Devis</h1>
+  </div>
+  <button id="btn-new" class="icon-btn" title="Nouveau devis">🔄 Nouveau</button>
+</header>
+
+<div id="progress-dots" class="progress-dots">
+  <span class="dot active" data-step="0"></span>
+  <span class="dot" data-step="1"></span>
+  <span class="dot" data-step="2"></span>
+  <span class="dot" data-step="3"></span>
+</div>
+
+<main class="wizard">
+
+  <section class="step active" data-step="0">
+    <div class="step-head">
+      <span class="step-icon">🏗️</span>
+      <h2>Qui êtes-vous ?</h2>
+      <button class="btn-speak" data-say="Qui êtes-vous ? Entrez votre nom, votre métier, votre téléphone et votre ville.">🔊</button>
+    </div>
+
+    <label class="big-field">
+      <span class="big-label">🧑🏾‍🔧 Votre nom</span>
+      <input type="text" id="co-name" placeholder="Ex : Koffi Bâtiment">
+    </label>
+    <label class="big-field">
+      <span class="big-label">🔨 Votre métier</span>
+      <input type="text" id="co-trade" placeholder="Ex : Maçon">
+    </label>
+    <label class="big-field">
+      <span class="big-label">📞 Votre téléphone</span>
+      <input type="tel" id="co-phone" placeholder="90 00 00 00" inputmode="tel">
+    </label>
+    <label class="big-field">
+      <span class="big-label">📍 Votre ville</span>
+      <input type="text" id="co-city" placeholder="Ex : Lomé">
+    </label>
+  </section>
+
+  <section class="step" data-step="1">
+    <div class="step-head">
+      <span class="step-icon">🧑🏾‍💼</span>
+      <h2>C'est pour qui ?</h2>
+      <button class="btn-speak" data-say="C'est pour qui ? Entrez le nom du client et ce que vous allez faire comme travaux.">🔊</button>
+    </div>
+    <p class="step-sub">Devis N° <strong id="devis-number">—</strong></p>
+
+    <label class="big-field">
+      <span class="big-label">👤 Nom du client</span>
+      <input type="text" id="cl-name" placeholder="Ex : Mairie de Djagblé">
+    </label>
+    <label class="big-field">
+      <span class="big-label">🧱 Les travaux</span>
+      <input type="text" id="cl-object" placeholder="Ex : Carrelage salon">
+    </label>
+    <label class="big-field">
+      <span class="big-label">📅 Date</span>
+      <input type="date" id="cl-date">
+    </label>
+    <label class="big-field">
+      <span class="big-label">⏳ Offre valable</span>
+      <div class="chip-row" id="validity-chips">
+        <button type="button" class="chip" data-value="15">15 jours</button>
+        <button type="button" class="chip chip-selected" data-value="30">30 jours</button>
+        <button type="button" class="chip" data-value="45">45 jours</button>
+        <button type="button" class="chip" data-value="60">60 jours</button>
+      </div>
+    </label>
+  </section>
+
+  <section class="step" data-step="2">
+    <div class="step-head">
+      <span class="step-icon">📋</span>
+      <h2>Ce que vous vendez</h2>
+      <button class="btn-speak" data-say="Ajoutez une ligne pour chaque chose que vous vendez. Choisissez l'unité, la quantité, puis le prix.">🔊</button>
+    </div>
+
+    <div id="lines-wrap" class="lines-wrap"></div>
+
+    <button id="btn-add-line" class="btn-add-line">➕ Ajouter une ligne</button>
+  </section>
+
+  <section class="step" data-step="3">
+    <div class="step-head">
+      <span class="step-icon">🧾</span>
+      <h2>Votre devis est prêt</h2>
+      <button class="btn-speak" data-say="Voici le total. Appuyez sur générer le PDF pour créer votre devis et l'envoyer sur WhatsApp.">🔊</button>
+    </div>
+
+    <label class="switch-row">
+      <span>🧮 Ajouter la TVA (18%)</span>
+      <input type="checkbox" id="apply-tva">
+      <span class="switch-track"><span class="switch-thumb"></span></span>
+    </label>
+
+    <label class="big-field">
+      <span class="big-label">📝 Note (facultatif)</span>
+      <textarea id="cl-note" rows="2" placeholder="Ex : Acompte 40% à la commande"></textarea>
+    </label>
+
+    <div class="recap-box">
+      <div class="recap-row"><span>Sous-total</span><span id="t-subtotal">0 FCFA</span></div>
+      <div class="recap-row" id="row-tva"><span>TVA (18%)</span><span id="t-tva">0 FCFA</span></div>
+      <div class="recap-row recap-final"><span>TOTAL</span><span id="t-total">0 FCFA</span></div>
+    </div>
+
+    <div class="recap-actions">
+      <button id="btn-save" class="btn-secondary">💾 Enregistrer</button>
+      <button id="btn-pdf" class="btn-primary">📄 Générer le PDF</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="nav-bar">
+  <button id="btn-prev" class="btn-nav btn-nav-prev" disabled>⬅️ Retour</button>
+  <button id="btn-next" class="btn-nav btn-nav-next">Suivant ➡️</button>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+
+<script src="js/db.js"></script>
+<script src="js/pdf-export.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
