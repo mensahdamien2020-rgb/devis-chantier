@@ -1,4 +1,4 @@
-const CACHE_NAME = "devis-chantier-v2";
+﻿const CACHE_NAME = "devis-chantier-v2";
 
 const APP_SHELL = [
   "./",

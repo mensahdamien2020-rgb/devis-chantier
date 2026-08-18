@@ -1,8 +1,8 @@
-const UNITES = [
-  { v: "u",       icon: "🔘", label: "unité" },
-  { v: "m",       icon: "📏", label: "mètre" },
-  { v: "m²",      icon: "⬜", label: "m²" },
-  { v: "m³",      icon: "🧊", label: "m³" },
+﻿const UNITES = [
+  { v: "u",       icon: "🔘", label: "unite" },
+  { v: "m",       icon: "📏", label: "metre" },
+  { v: "m2",      icon: "⬜", label: "m2" },
+  { v: "m3",      icon: "🧊", label: "m3" },
   { v: "kg",      icon: "⚖️", label: "kg" },
   { v: "sac",     icon: "🛍️", label: "sac" },
   { v: "j",       icon: "📅", label: "jour" },
@@ -39,12 +39,12 @@ function restoreOrCreateDraft() {
   const draft = DB.getDraft();
   if (draft && draft.lines) { state = draft; } else { startNewDevis(); }
   document.getElementById("devis-number").textContent = state.devisNumber;
-  document.getElementById("cl-name").value = state.client?.name || "";
-  document.getElementById("cl-object").value = state.client?.object || "";
-  document.getElementById("cl-date").value = state.client?.date || todayISO();
-  document.getElementById("cl-note").value = state.client?.note || "";
+  document.getElementById("cl-name").value = state.client ? state.client.name || "" : "";
+  document.getElementById("cl-object").value = state.client ? state.client.object || "" : "";
+  document.getElementById("cl-date").value = (state.client && state.client.date) || todayISO();
+  document.getElementById("cl-note").value = state.client ? state.client.note || "" : "";
   document.getElementById("apply-tva").checked = !!state.applyTva;
-  selectValidityChip(state.client?.validity || "30");
+  selectValidityChip((state.client && state.client.validity) || "30");
 }
 
 function startNewDevis() {
@@ -67,10 +67,10 @@ function goToStep(n) {
   n = Math.max(0, Math.min(TOTAL_STEPS - 1, n));
   currentStep = n;
 
-  document.querySelectorAll(".step").forEach(el => {
+  document.querySelectorAll(".step").forEach(function(el) {
     el.classList.toggle("active", Number(el.dataset.step) === n);
   });
-  document.querySelectorAll(".dot").forEach(el => {
+  document.querySelectorAll(".dot").forEach(function(el) {
     const s = Number(el.dataset.step);
     el.classList.toggle("active", s === n);
     el.classList.toggle("done", s < n);
@@ -81,7 +81,7 @@ function goToStep(n) {
   nextBtn.classList.toggle("hidden", n === TOTAL_STEPS - 1);
 
   stopSpeaking();
-  window.scrollTo({ top: 0, behavior: "instant" });
+  window.scrollTo(0, 0);
 
   if (n === TOTAL_STEPS - 1) updateTotals();
 }
@@ -102,7 +102,7 @@ function validateStep(n) {
     }
   }
   if (n === 2) {
-    const hasValid = state.lines.some(l => l.designation && lineTotal(l) > 0);
+    const hasValid = state.lines.some(function(l) { return l.designation && lineTotal(l) > 0; });
     if (!hasValid) {
       showToast("Ajoutez au moins une ligne avec un prix");
       speak("Ajoutez au moins une ligne avec un prix");
@@ -116,45 +116,39 @@ function renderLines() {
   const wrap = document.getElementById("lines-wrap");
   wrap.innerHTML = "";
 
-  state.lines.forEach((line, idx) => {
+  state.lines.forEach(function(line, idx) {
     const el = document.createElement("div");
     el.className = "line-item";
     el.dataset.id = line.id;
 
-    const unitButtons = UNITES.map(u => `
-      <button type="button" class="unit-btn ${line.unite === u.v ? "unit-selected" : ""}" data-unit="${u.v}">
-        <span>${u.icon}</span><span class="unit-txt">${u.label}</span>
-      </button>
-    `).join("");
+    const unitButtons = UNITES.map(function(u) {
+      const sel = line.unite === u.v ? "unit-selected" : "";
+      return '<button type="button" class="unit-btn ' + sel + '" data-unit="' + u.v + '"><span>' + u.icon + '</span><span class="unit-txt">' + u.label + '</span></button>';
+    }).join("");
 
-    el.innerHTML = `
-      <div class="field-block">
-        <span class="mini-label">🧱 Désignation ${idx + 1}</span>
-        <input type="text" class="line-designation" placeholder="Ex : Carrelage 40x40" value="${escapeHtml(line.designation)}">
-      </div>
-
-      <div class="field-block">
-        <span class="mini-label">Unité</span>
-        <div class="unit-picker">${unitButtons}</div>
-      </div>
-
-      <div class="field-block">
-        <span class="mini-label">Quantité</span>
-        <div class="qty-stepper">
-          <button type="button" class="qty-btn qty-minus">−</button>
-          <input type="number" inputmode="decimal" min="0" step="any" class="line-qte" value="${line.qte}">
-          <button type="button" class="qty-btn qty-plus">＋</button>
-        </div>
-      </div>
-
-      <div class="field-block">
-        <span class="mini-label">💰 Prix pour un(e) ${escapeHtml(line.unite)}</span>
-        <input type="number" inputmode="numeric" min="0" step="1" class="line-pu" placeholder="0" value="${line.pu}">
-      </div>
-
-      <div class="line-total">${fmt(lineTotal(line))}</div>
-      <button type="button" class="btn-del-line">🗑️ Supprimer cette ligne</button>
-    `;
+    el.innerHTML =
+      '<div class="field-block">' +
+        '<span class="mini-label">🧱 Designation ' + (idx + 1) + '</span>' +
+        '<input type="text" class="line-designation" placeholder="Ex : Carrelage 40x40" value="' + escapeHtml(line.designation) + '">' +
+      '</div>' +
+      '<div class="field-block">' +
+        '<span class="mini-label">Unite</span>' +
+        '<div class="unit-picker">' + unitButtons + '</div>' +
+      '</div>' +
+      '<div class="field-block">' +
+        '<span class="mini-label">Quantite</span>' +
+        '<div class="qty-stepper">' +
+          '<button type="button" class="qty-btn qty-minus">-</button>' +
+          '<input type="number" inputmode="decimal" min="0" step="any" class="line-qte" value="' + line.qte + '">' +
+          '<button type="button" class="qty-btn qty-plus">+</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="field-block">' +
+        '<span class="mini-label">💰 Prix pour un(e) ' + escapeHtml(line.unite) + '</span>' +
+        '<input type="number" inputmode="numeric" min="0" step="1" class="line-pu" placeholder="0" value="' + line.pu + '">' +
+      '</div>' +
+      '<div class="line-total">' + fmt(lineTotal(line)) + '</div>' +
+      '<button type="button" class="btn-del-line">🗑️ Supprimer cette ligne</button>';
 
     wrap.appendChild(el);
   });
@@ -167,7 +161,7 @@ function lineTotal(line) {
 }
 
 function updateTotals() {
-  const subtotal = state.lines.reduce((sum, l) => sum + lineTotal(l), 0);
+  const subtotal = state.lines.reduce(function(sum, l) { return sum + lineTotal(l); }, 0);
   const tva = state.applyTva ? subtotal * 0.18 : 0;
   const total = subtotal + tva;
 
@@ -176,13 +170,14 @@ function updateTotals() {
   document.getElementById("t-total").textContent = fmt(total);
   document.getElementById("row-tva").style.opacity = state.applyTva ? "1" : "0.4";
 
-  return { subtotal, tva, total };
+  return { subtotal: subtotal, tva: tva, total: total };
 }
 
 function escapeHtml(str) {
-  return (str || "").replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-  }[c]));
+  return (str || "").replace(/[&<>"']/g, function(c) {
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" };
+    return map[c];
+  });
 }
 
 function speak(text) {
@@ -196,33 +191,35 @@ function speak(text) {
 
 function stopSpeaking() {
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-  document.querySelectorAll(".btn-speak").forEach(b => b.classList.remove("speaking"));
+  document.querySelectorAll(".btn-speak").forEach(function(b) { b.classList.remove("speaking"); });
 }
 
 function bindEvents() {
-  document.getElementById("btn-next").addEventListener("click", () => {
+  document.getElementById("btn-next").addEventListener("click", function() {
     if (!validateStep(currentStep)) return;
     goToStep(currentStep + 1);
   });
-  document.getElementById("btn-prev").addEventListener("click", () => goToStep(currentStep - 1));
+  document.getElementById("btn-prev").addEventListener("click", function() {
+    goToStep(currentStep - 1);
+  });
 
-  document.querySelectorAll(".btn-speak").forEach(btn => {
-    btn.addEventListener("click", () => {
+  document.querySelectorAll(".btn-speak").forEach(function(btn) {
+    btn.addEventListener("click", function() {
       btn.classList.add("speaking");
       speak(btn.dataset.say);
     });
   });
 
-  document.getElementById("btn-add-line").addEventListener("click", () => {
+  document.getElementById("btn-add-line").addEventListener("click", function() {
     state.lines.push(emptyLine());
     persistDraft();
     renderLines();
   });
 
-  document.getElementById("lines-wrap").addEventListener("input", (e) => {
+  document.getElementById("lines-wrap").addEventListener("input", function(e) {
     const row = e.target.closest(".line-item");
     if (!row) return;
-    const line = state.lines.find(l => l.id === row.dataset.id);
+    const line = state.lines.find(function(l) { return l.id === row.dataset.id; });
     if (!line) return;
 
     if (e.target.classList.contains("line-designation")) line.designation = e.target.value;
@@ -233,10 +230,10 @@ function bindEvents() {
     persistDraft();
   });
 
-  document.getElementById("lines-wrap").addEventListener("click", (e) => {
+  document.getElementById("lines-wrap").addEventListener("click", function(e) {
     const row = e.target.closest(".line-item");
     if (!row) return;
-    const line = state.lines.find(l => l.id === row.dataset.id);
+    const line = state.lines.find(function(l) { return l.id === row.dataset.id; });
     if (!line) return;
 
     if (e.target.closest(".unit-btn")) {
@@ -260,27 +257,27 @@ function bindEvents() {
     }
     if (e.target.classList.contains("btn-del-line")) {
       if (state.lines.length === 1) { showToast("Il faut au moins une ligne"); return; }
-      state.lines = state.lines.filter(l => l.id !== row.dataset.id);
+      state.lines = state.lines.filter(function(l) { return l.id !== row.dataset.id; });
       persistDraft();
       renderLines();
     }
   });
 
-  document.getElementById("validity-chips").addEventListener("click", (e) => {
+  document.getElementById("validity-chips").addEventListener("click", function(e) {
     const chip = e.target.closest(".chip");
     if (!chip) return;
     selectValidityChip(chip.dataset.value);
     syncClientFromForm();
   });
 
-  document.getElementById("apply-tva").addEventListener("change", (e) => {
+  document.getElementById("apply-tva").addEventListener("change", function(e) {
     state.applyTva = e.target.checked;
     updateTotals();
     persistDraft();
   });
 
-  ["co-name", "co-trade", "co-phone", "co-city"].forEach(id => {
-    document.getElementById(id).addEventListener("input", () => {
+  ["co-name", "co-trade", "co-phone", "co-city"].forEach(function(id) {
+    document.getElementById(id).addEventListener("input", function() {
       DB.saveCompany({
         name: document.getElementById("co-name").value,
         trade: document.getElementById("co-trade").value,
@@ -290,12 +287,12 @@ function bindEvents() {
     });
   });
 
-  ["cl-name", "cl-object", "cl-date", "cl-note"].forEach(id => {
+  ["cl-name", "cl-object", "cl-date", "cl-note"].forEach(function(id) {
     document.getElementById(id).addEventListener("input", syncClientFromForm);
   });
 
-  document.getElementById("btn-new").addEventListener("click", () => {
-    if (confirm("Démarrer un nouveau devis ?")) {
+  document.getElementById("btn-new").addEventListener("click", function() {
+    if (confirm("Demarrer un nouveau devis ?")) {
       startNewDevis();
       document.getElementById("devis-number").textContent = state.devisNumber;
       document.getElementById("cl-name").value = "";
@@ -309,35 +306,35 @@ function bindEvents() {
     }
   });
 
-  document.getElementById("btn-save").addEventListener("click", () => {
+  document.getElementById("btn-save").addEventListener("click", function() {
     persistDraft();
     const co = DB.getCompany();
     if (!co.name) { showToast("Renseignez d'abord votre nom"); return; }
-    DB.archiveDevis({ ...state, savedAt: new Date().toISOString(), totals: updateTotals() });
-    showToast("✅ Devis enregistré sur ce téléphone");
-    speak("Devis enregistré");
+    DB.archiveDevis(Object.assign({}, state, { savedAt: new Date().toISOString(), totals: updateTotals() }));
+    showToast("✅ Devis enregistre sur ce telephone");
+    speak("Devis enregistre");
   });
 
-  document.getElementById("btn-pdf").addEventListener("click", async () => {
+  document.getElementById("btn-pdf").addEventListener("click", async function() {
     const co = DB.getCompany();
     if (!co.name) { showToast("Renseignez d'abord votre nom"); return; }
     if (!state.client.name) { showToast("Indiquez le nom du client"); return; }
-    const validLines = state.lines.filter(l => l.designation && lineTotal(l) > 0);
+    const validLines = state.lines.filter(function(l) { return l.designation && lineTotal(l) > 0; });
     if (validLines.length === 0) { showToast("Ajoutez au moins une ligne avec un montant"); return; }
 
     try {
-      await PDFExport.generate({ company: co, state, totals: updateTotals() });
-      showToast("📄 PDF prêt à partager");
-      speak("Votre devis est prêt");
+      await PDFExport.generate({ company: co, state: state, totals: updateTotals() });
+      showToast("📄 PDF pret a partager");
+      speak("Votre devis est pret");
     } catch (err) {
       console.error(err);
-      showToast("Le PDF n'a pas pu être généré. Réessayez.");
+      showToast("Le PDF n'a pas pu etre genere. Reessayez.");
     }
   });
 }
 
 function selectValidityChip(value) {
-  document.querySelectorAll("#validity-chips .chip").forEach(c => {
+  document.querySelectorAll("#validity-chips .chip").forEach(function(c) {
     c.classList.toggle("chip-selected", c.dataset.value === String(value));
   });
 }
@@ -361,12 +358,12 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.remove("hidden");
   clearTimeout(showToast._timer);
-  showToast._timer = setTimeout(() => t.classList.add("hidden"), 2600);
+  showToast._timer = setTimeout(function() { t.classList.add("hidden"); }, 2600);
 }
 
 function watchOnlineStatus() {
   const banner = document.getElementById("offline-banner");
-  const update = () => banner.classList.toggle("hidden", navigator.onLine);
+  const update = function() { banner.classList.toggle("hidden", navigator.onLine); };
   window.addEventListener("online", update);
   window.addEventListener("offline", update);
   update();
@@ -374,7 +371,7 @@ function watchOnlineStatus() {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
+    window.addEventListener("load", function() {
       navigator.serviceWorker.register("service-worker.js").catch(console.error);
     });
   }
